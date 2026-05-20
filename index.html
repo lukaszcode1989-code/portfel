@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<!-- PWA / iPhone -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Portfel">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#ffffff">
+
+<!-- Ikona dla iPhone (wbudowana jako SVG→base64) -->
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMTIwIj48cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgcng9IjI2IiBmaWxsPSIjMWExYTE4Ii8+PHRleHQgeT0iNzgiIHg9IjUwJSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSI2NCI+8J+SsDwvdGV4dD48L3N2Zz4=">
+
+<title>Mój Portfel</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f5f0;
+    color: #1a1a18;
+    min-height: 100vh;
+    padding: 0 0 60px;
+    /* safe area dla iPhone z notchem */
+    padding-bottom: max(60px, env(safe-area-inset-bottom));
+  }
+  .header {
+    background: #fff;
+    border-bottom: 0.5px solid #e0dfd8;
+    padding: 20px 20px 16px;
+    padding-top: max(20px, env(safe-area-inset-top));
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header h1 { font-size: 22px; font-weight: 500; margin-bottom: 3px; }
+  .header .subtitle { font-size: 13px; color: #888780; min-height: 18px; }
+  .content { padding: 16px 16px 0; max-width: 480px; margin: 0 auto; }
+
+  .section-title {
+    font-size: 11px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: #b4b2a9; margin: 20px 0 10px;
+  }
+  .card {
+    background: #fff; border: 0.5px solid #e0dfd8;
+    border-radius: 14px; padding: 16px 18px; margin-bottom: 12px;
+  }
+  .card-header {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 12px; gap: 8px;
+  }
+  .card-label { font-size: 17px; font-weight: 500; flex-shrink: 0; }
+  .rate-badge {
+    font-size: 11px; color: #5f5e5a; background: #f1efe8;
+    padding: 3px 8px; border-radius: 8px;
+    white-space: nowrap; text-align: right; line-height: 1.6;
+  }
+  .input-row { display: flex; align-items: center; gap: 8px; }
+  .input-row input {
+    flex: 1; font-size: 22px; font-weight: 500;
+    border: none; background: transparent; color: #1a1a18;
+    outline: none; padding: 0; width: 0;
+    -moz-appearance: textfield;
+  }
+  .input-row input::-webkit-outer-spin-button,
+  .input-row input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .unit { font-size: 14px; color: #888780; font-weight: 500; }
+  .converted { font-size: 12px; color: #b4b2a9; margin-top: 6px; }
+
+  .total-card {
+    background: #1a1a18; border-radius: 14px;
+    padding: 20px 18px; margin-bottom: 12px; color: #fff;
+  }
+  .total-label {
+    font-size: 12px; color: #888780;
+    text-transform: uppercase; letter-spacing: 0.07em;
+    font-weight: 500; margin-bottom: 6px;
+  }
+  .total-amount { font-size: 34px; font-weight: 500; margin-bottom: 14px; letter-spacing: -0.5px; }
+  .breakdown { display: flex; flex-direction: column; gap: 6px; }
+  .breakdown-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .breakdown-name { color: #888780; min-width: 70px; font-size: 12px; }
+  .breakdown-bar-wrap { flex: 1; background: #2c2c2a; border-radius: 4px; height: 4px; overflow: hidden; }
+  .breakdown-bar { height: 100%; border-radius: 4px; background: #d3d1c7; transition: width 0.3s; }
+  .breakdown-pct { color: #d3d1c7; min-width: 38px; text-align: right; }
+
+  .refresh-btn {
+    width: 100%; padding: 13px; font-size: 15px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: #fff; border: 0.5px solid #e0dfd8;
+    border-radius: 10px; color: #1a1a18; margin-bottom: 10px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .refresh-btn:active { background: #f1efe8; }
+  .footer { font-size: 11px; color: #b4b2a9; text-align: center; padding: 0 16px; line-height: 1.6; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    display: inline-block; width: 12px; height: 12px;
+    border: 1.5px solid #ccc; border-top-color: #888;
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+    vertical-align: -1px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>💰 Mój portfel</h1>
+  <p class="subtitle" id="last-update"><span class="spinner"></span> Ładowanie kursów…</p>
+</div>
+
+<div class="content">
+
+  <p class="section-title">Waluty i metale</p>
+
+  <div class="card">
+    <div class="card-header"><span class="card-label">🇵🇱 Złotówki</span></div>
+    <div class="input-row">
+      <input type="number" id="pln-input" placeholder="0" min="0" step="any" inputmode="decimal">
+      <span class="unit">PLN</span>
+    </div>
+    <p class="converted">= <span id="pln-in-pln">0,00 zł</span></p>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-label">🇪🇺 Euro</span>
+      <span class="rate-badge">1 EUR = <span id="eur-rate">…</span> PLN</span>
+    </div>
+    <div class="input-row">
+      <input type="number" id="eur-input" placeholder="0" min="0" step="any" inputmode="decimal">
+      <span class="unit">EUR</span>
+    </div>
+    <p class="converted">= <span id="eur-in-pln">0,00 zł</span></p>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-label">🥇 Złoto (uncje)</span>
+      <span class="rate-badge">1 oz = <span id="gold-rate-usd">…</span> USD<br><span id="gold-rate-pln">…</span> PLN</span>
+    </div>
+    <div class="input-row">
+      <input type="number" id="gold-input" placeholder="0" min="0" step="any" inputmode="decimal">
+      <span class="unit">oz</span>
+    </div>
+    <p class="converted">= <span id="gold-in-pln">0,00 zł</span></p>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-label">🥇 Złoto (gramy)</span>
+      <span class="rate-badge">1 g = <span id="gold-rate-g-pln">…</span> PLN</span>
+    </div>
+    <div class="input-row">
+      <input type="number" id="goldg-input" placeholder="0" min="0" step="any" inputmode="decimal">
+      <span class="unit">g</span>
+    </div>
+    <p class="converted">= <span id="goldg-in-pln">0,00 zł</span></p>
+  </div>
+
+  <p class="section-title">Kryptowaluty</p>
+  <div id="crypto-cards"></div>
+
+  <div class="total-card">
+    <p class="total-label">Łącznie w złotówkach</p>
+    <p class="total-amount" id="total">0,00 zł</p>
+    <div class="breakdown" id="breakdown"></div>
+  </div>
+
+  <button class="refresh-btn" onclick="loadRates()">↻ Odśwież kursy</button>
+  <p class="footer">Kursy: NBP (EUR/USD) · Coinbase (złoto) · CoinGecko (krypto). Dane orientacyjne.</p>
+</div>
+
+<script>
+const CRYPTOS = [
+  { id: 'ripple',             sym: 'XRP',    name: 'XRP',      emoji: '🔵' },
+  { id: 'chainlink',          sym: 'LINK',   name: 'LINK',     emoji: '🔗' },
+  { id: 'bonk',               sym: 'BONK',   name: 'BONK',     emoji: '🐶' },
+  { id: 'pepe',               sym: 'PEPE',   name: 'PEPE',     emoji: '🐸' },
+  { id: 'shiba-inu',          sym: 'SHIB',   name: 'SHIB',     emoji: '🐕' },
+  { id: 'solana',             sym: 'SOL',    name: 'SOL',      emoji: '☀️' },
+  { id: 'cardano',            sym: 'ADA',    name: 'ADA',      emoji: '🔷' },
+  { id: 'polkadot',           sym: 'DOT',    name: 'DOT',      emoji: '⚪' },
+  { id: 'injective-protocol', sym: 'INJ',    name: 'INJ',      emoji: '💫' },
+  { id: 'gala',               sym: 'GALA',   name: 'GALA',     emoji: '🎮' },
+  { id: 'x-empire',           sym: 'X',      name: 'X Empire', emoji: '✖️' },
+  { id: 'popcat',             sym: 'POPCAT', name: 'POPCAT',   emoji: '🐱' },
+];
+
+let rates = { eur: null, usd: null, goldUsd: null };
+let cryptoPrices = {};
+
+// Bezpieczny localStorage (Safari prywatny go blokuje)
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch(e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch(e) {} }
+};
+
+function goldPln() {
+  return (rates.goldUsd && rates.usd) ? rates.goldUsd * rates.usd : null;
+}
+
+function fmtPrice(usd) {
+  if (!usd && usd !== 0) return '…';
+  if (usd >= 1000) return usd.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' USD';
+  if (usd >= 1)    return usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) + ' USD';
+  return parseFloat(usd.toPrecision(4)) + ' USD';
+}
+
+function fmtPln(val) {
+  if (!val && val !== 0) return '…';
+  if (val >= 0.01) return val.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' zł';
+  return val.toPrecision(4).replace('.', ',') + ' zł';
+}
+
+function fmt(val) {
+  return val.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' zł';
+}
+
+function buildCryptoCards() {
+  document.getElementById('crypto-cards').innerHTML = CRYPTOS.map(c => `
+    <div class="card">
+      <div class="card-header">
+        <span class="card-label">${c.emoji} ${c.name}</span>
+        <span class="rate-badge" id="badge-${c.sym}">…</span>
+      </div>
+      <div class="input-row">
+        <input type="number" id="input-${c.sym}" placeholder="0" min="0" step="any" inputmode="decimal">
+        <span class="unit">${c.sym}</span>
+      </div>
+      <p class="converted">= <span id="val-${c.sym}">0,00 zł</span></p>
+    </div>
+  `).join('');
+}
+
+function saveValues() {
+  const data = {};
+  ['pln-input','eur-input','gold-input','goldg-input',
+   ...CRYPTOS.map(c => 'input-' + c.sym)].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) data[id] = el.value;
+  });
+  store.set('portfel_v2', JSON.stringify(data));
+}
+
+function loadSavedValues() {
+  const raw = store.get('portfel_v2');
+  if (!raw) return;
+  try {
+    const data = JSON.parse(raw);
+    Object.entries(data).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el && val !== '') el.value = val;
+    });
+  } catch(e) {}
+}
+
+function calc() {
+  const pln   = parseFloat(document.getElementById('pln-input').value)   || 0;
+  const eur   = parseFloat(document.getElementById('eur-input').value)   || 0;
+  const gold  = parseFloat(document.getElementById('gold-input').value)  || 0;
+  const goldg = parseFloat(document.getElementById('goldg-input').value) || 0;
+
+  const plnVal   = pln;
+  const eurVal   = rates.eur ? eur * rates.eur : 0;
+  const gp       = goldPln();
+  const goldVal  = gp ? gold  * gp            : 0;
+  const goldgVal = gp ? goldg * (gp / 31.1035): 0;
+
+  let cryptoTotal = 0;
+  const cryptoItems = [];
+  CRYPTOS.forEach(c => {
+    const amt = parseFloat(document.getElementById('input-' + c.sym)?.value) || 0;
+    const p   = cryptoPrices[c.sym];
+    const val = (p && rates.usd) ? amt * p * rates.usd : 0;
+    const el  = document.getElementById('val-' + c.sym);
+    if (el) el.textContent = fmtPln(val);
+    if (val > 0) cryptoItems.push({ label: c.sym, val });
+    cryptoTotal += val;
+  });
+
+  const total = plnVal + eurVal + goldVal + goldgVal + cryptoTotal;
+
+  document.getElementById('pln-in-pln').textContent   = fmt(plnVal);
+  document.getElementById('eur-in-pln').textContent   = fmt(eurVal);
+  document.getElementById('gold-in-pln').textContent  = fmt(goldVal);
+  document.getElementById('goldg-in-pln').textContent = fmt(goldgVal);
+  document.getElementById('total').textContent        = fmt(total);
+
+  const bd = document.getElementById('breakdown');
+  const items = [
+    { label: 'PLN',      val: plnVal   },
+    { label: 'EUR',      val: eurVal   },
+    { label: 'Złoto oz', val: goldVal  },
+    { label: 'Złoto g',  val: goldgVal },
+    ...cryptoItems
+  ].filter(x => x.val > 0);
+
+  bd.innerHTML = (total > 0 && items.length > 0) ? items.map(x => {
+    const pct = ((x.val / total) * 100).toFixed(1);
+    return `<div class="breakdown-row">
+      <span class="breakdown-name">${x.label}</span>
+      <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${pct}%"></div></div>
+      <span class="breakdown-pct">${pct}%</span>
+    </div>`;
+  }).join('') : '';
+}
+
+async function loadRates() {
+  const statusEl = document.getElementById('last-update');
+  statusEl.innerHTML = '<span class="spinner"></span> Pobieranie kursów…';
+
+  try {
+    // NBP — ma poprawne nagłówki CORS, działa z każdej strony
+    const [eurRes, usdRes] = await Promise.all([
+      fetch('https://api.nbp.pl/api/exchangerates/rates/a/eur/?format=json'),
+      fetch('https://api.nbp.pl/api/exchangerates/rates/a/usd/?format=json')
+    ]);
+    if (!eurRes.ok || !usdRes.ok) throw new Error('NBP error');
+    rates.eur = (await eurRes.json()).rates[0].mid;
+    rates.usd = (await usdRes.json()).rates[0].mid;
+    document.getElementById('eur-rate').textContent = rates.eur.toFixed(4);
+
+    // Złoto — Coinbase public API
+    const gRes = await fetch('https://api.coinbase.com/v2/prices/XAU-USD/spot');
+    if (!gRes.ok) throw new Error('Coinbase error');
+    rates.goldUsd = parseFloat((await gRes.json()).data.amount);
+    const gp = goldPln();
+    document.getElementById('gold-rate-usd').textContent = Math.round(rates.goldUsd).toLocaleString('pl-PL');
+    if (gp) {
+      document.getElementById('gold-rate-pln').textContent   = Math.round(gp).toLocaleString('pl-PL');
+      document.getElementById('gold-rate-g-pln').textContent = (gp / 31.1035).toFixed(2).replace('.', ',');
+    }
+
+    // CoinGecko — darmowe, bez klucza
+    const ids   = CRYPTOS.map(c => c.id).join(',');
+    const cgRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
+    if (!cgRes.ok) throw new Error('CoinGecko error');
+    const cgData = await cgRes.json();
+
+    CRYPTOS.forEach(c => {
+      const price = cgData[c.id]?.usd ?? null;
+      cryptoPrices[c.sym] = price;
+      const badge = document.getElementById('badge-' + c.sym);
+      if (!badge) return;
+      badge.textContent = (price !== null && rates.usd)
+        ? fmtPrice(price) + '\n' + fmtPln(price * rates.usd)
+        : 'brak danych';
+    });
+
+    statusEl.textContent = 'Kursy z ' + new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+    calc();
+
+  } catch(e) {
+    statusEl.textContent = '⚠ Błąd pobierania — sprawdź internet';
+    console.error(e);
+  }
+}
+
+// Start
+buildCryptoCards();
+loadSavedValues();
+calc();
+
+// Nasłuchiwacze z zapisem
+const allInputIds = ['pln-input','eur-input','gold-input','goldg-input',
+  ...CRYPTOS.map(c => 'input-' + c.sym)];
+allInputIds.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', () => { calc(); saveValues(); });
+});
+
+loadRates();
+</script>
+</body>
+</html>
