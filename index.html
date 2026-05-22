@@ -3,107 +3,154 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-
-<!-- PWA / iPhone -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Portfel">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff">
-
-<!-- Ikona dla iPhone (wbudowana jako SVG→base64) -->
 <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMTIwIj48cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgcng9IjI2IiBmaWxsPSIjMWExYTE4Ii8+PHRleHQgeT0iNzgiIHg9IjUwJSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSI2NCI+8J+SsDwvdGV4dD48L3N2Zz4=">
-
 <title>Mój Portfel</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #f5f5f0;
-    color: #1a1a18;
-    min-height: 100vh;
-    padding: 0 0 60px;
-    /* safe area dla iPhone z notchem */
-    padding-bottom: max(60px, env(safe-area-inset-bottom));
-  }
-  .header {
-    background: #fff;
-    border-bottom: 0.5px solid #e0dfd8;
-    padding: 20px 20px 16px;
-    padding-top: max(20px, env(safe-area-inset-top));
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-  .header h1 { font-size: 22px; font-weight: 500; margin-bottom: 3px; }
-  .header .subtitle { font-size: 13px; color: #888780; min-height: 18px; }
-  .content { padding: 16px 16px 0; max-width: 480px; margin: 0 auto; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f5f5f0; color: #1a1a18;
+  height: 100dvh; overflow: hidden;
+  display: flex; flex-direction: column;
+}
 
-  .section-title {
-    font-size: 11px; font-weight: 500;
-    text-transform: uppercase; letter-spacing: 0.08em;
-    color: #b4b2a9; margin: 20px 0 10px;
-  }
-  .card {
-    background: #fff; border: 0.5px solid #e0dfd8;
-    border-radius: 14px; padding: 16px 18px; margin-bottom: 12px;
-  }
-  .card-header {
-    display: flex; align-items: center;
-    justify-content: space-between; margin-bottom: 12px; gap: 8px;
-  }
-  .card-label { font-size: 17px; font-weight: 500; flex-shrink: 0; }
-  .rate-badge {
-    font-size: 11px; color: #5f5e5a; background: #f1efe8;
-    padding: 3px 8px; border-radius: 8px;
-    white-space: nowrap; text-align: right; line-height: 1.6;
-  }
-  .input-row { display: flex; align-items: center; gap: 8px; }
-  .input-row input {
-    flex: 1; font-size: 22px; font-weight: 500;
-    border: none; background: transparent; color: #1a1a18;
-    outline: none; padding: 0; width: 0;
-    -moz-appearance: textfield;
-  }
-  .input-row input::-webkit-outer-spin-button,
-  .input-row input::-webkit-inner-spin-button { -webkit-appearance: none; }
-  .unit { font-size: 14px; color: #888780; font-weight: 500; }
-  .converted { font-size: 12px; color: #b4b2a9; margin-top: 6px; }
+/* ── HEADER ── */
+.header {
+  background: #fff; border-bottom: 0.5px solid #e0dfd8;
+  padding: 16px 20px 14px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  flex-shrink: 0;
+}
+.header h1 { font-size: 20px; font-weight: 500; margin-bottom: 2px; }
+.header .subtitle { font-size: 12px; color: #888780; min-height: 16px; }
 
-  .total-card {
-    background: #1a1a18; border-radius: 14px;
-    padding: 20px 18px; margin-bottom: 12px; color: #fff;
-  }
-  .total-label {
-    font-size: 12px; color: #888780;
-    text-transform: uppercase; letter-spacing: 0.07em;
-    font-weight: 500; margin-bottom: 6px;
-  }
-  .total-amount { font-size: 34px; font-weight: 500; margin-bottom: 14px; letter-spacing: -0.5px; }
-  .breakdown { display: flex; flex-direction: column; gap: 6px; }
-  .breakdown-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
-  .breakdown-name { color: #888780; min-width: 70px; font-size: 12px; }
-  .breakdown-bar-wrap { flex: 1; background: #2c2c2a; border-radius: 4px; height: 4px; overflow: hidden; }
-  .breakdown-bar { height: 100%; border-radius: 4px; background: #d3d1c7; transition: width 0.3s; }
-  .breakdown-pct { color: #d3d1c7; min-width: 38px; text-align: right; }
+/* ── TABS ── */
+.tabs {
+  display: flex; background: #fff;
+  border-bottom: 0.5px solid #e0dfd8;
+  flex-shrink: 0;
+}
+.tab {
+  flex: 1; padding: 10px 0; font-size: 14px; font-weight: 500;
+  text-align: center; color: #888780; cursor: pointer;
+  border-bottom: 2px solid transparent;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.tab.active { color: #1a1a18; border-bottom-color: #1a1a18; }
 
-  .refresh-btn {
-    width: 100%; padding: 13px; font-size: 15px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    background: #fff; border: 0.5px solid #e0dfd8;
-    border-radius: 10px; color: #1a1a18; margin-bottom: 10px;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .refresh-btn:active { background: #f1efe8; }
-  .footer { font-size: 11px; color: #b4b2a9; text-align: center; padding: 0 16px; line-height: 1.6; }
+/* ── PAGES ── */
+.pages { flex: 1; overflow: hidden; position: relative; }
+.page {
+  position: absolute; inset: 0;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+}
+.page.active { opacity: 1; pointer-events: all; }
+.content { padding: 14px 16px 0; max-width: 480px; margin: 0 auto; }
 
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .spinner {
-    display: inline-block; width: 12px; height: 12px;
-    border: 1.5px solid #ccc; border-top-color: #888;
-    border-radius: 50%; animation: spin 0.7s linear infinite;
-    vertical-align: -1px;
-  }
+/* ── CARDS ── */
+.section-title {
+  font-size: 11px; font-weight: 500; text-transform: uppercase;
+  letter-spacing: 0.08em; color: #b4b2a9; margin: 18px 0 9px;
+}
+.card {
+  background: #fff; border: 0.5px solid #e0dfd8;
+  border-radius: 14px; padding: 14px 16px; margin-bottom: 10px;
+}
+.card-header {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-bottom: 10px; gap: 8px;
+}
+.card-label { font-size: 16px; font-weight: 500; flex-shrink: 0; }
+.rate-badge {
+  font-size: 10.5px; color: #5f5e5a; background: #f1efe8;
+  padding: 3px 8px; border-radius: 8px;
+  white-space: pre-line; text-align: right; line-height: 1.6;
+}
+.input-row { display: flex; align-items: center; gap: 8px; }
+.input-row input {
+  flex: 1; font-size: 21px; font-weight: 500;
+  border: none; background: transparent; color: #1a1a18;
+  outline: none; padding: 0; width: 0; -moz-appearance: textfield;
+}
+.input-row input::-webkit-outer-spin-button,
+.input-row input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.unit { font-size: 13px; color: #888780; font-weight: 500; }
+.converted { font-size: 11.5px; color: #b4b2a9; margin-top: 5px; }
+
+/* ── TOTAL CARD ── */
+.total-card {
+  background: #1a1a18; border-radius: 14px;
+  padding: 18px 16px; margin-bottom: 10px; color: #fff;
+}
+.total-label {
+  font-size: 11px; color: #888780; text-transform: uppercase;
+  letter-spacing: 0.07em; font-weight: 500; margin-bottom: 5px;
+}
+.total-amount { font-size: 32px; font-weight: 500; margin-bottom: 12px; letter-spacing: -0.5px; }
+.breakdown { display: flex; flex-direction: column; gap: 5px; }
+.breakdown-row { display: flex; align-items: center; gap: 8px; }
+.breakdown-name { color: #888780; min-width: 68px; font-size: 11.5px; }
+.breakdown-bar-wrap { flex: 1; background: #2c2c2a; border-radius: 4px; height: 4px; overflow: hidden; }
+.breakdown-bar { height: 100%; border-radius: 4px; background: #d3d1c7; transition: width 0.3s; }
+.breakdown-pct { color: #d3d1c7; min-width: 36px; text-align: right; font-size: 11.5px; }
+
+.refresh-btn {
+  width: 100%; padding: 12px; font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: #fff; border: 0.5px solid #e0dfd8;
+  border-radius: 10px; color: #1a1a18; margin-bottom: 10px;
+  -webkit-tap-highlight-color: transparent;
+}
+.refresh-btn:active { background: #f1efe8; }
+.footer-note { font-size: 11px; color: #b4b2a9; text-align: center; padding: 0 16px 6px; line-height: 1.6; }
+
+/* ── HISTORIA ── */
+.history-header {
+  padding: 18px 16px 0; max-width: 480px; margin: 0 auto;
+}
+.history-header h2 { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+.history-header p { font-size: 12px; color: #888780; }
+
+.chart-card {
+  background: #fff; border: 0.5px solid #e0dfd8;
+  border-radius: 14px; margin: 14px 16px 10px;
+  padding: 16px 12px 10px; max-width: 480px;
+  margin-left: auto; margin-right: auto;
+}
+.chart-wrap { position: relative; height: 200px; }
+canvas#histChart { width: 100% !important; height: 100% !important; }
+
+.history-list { padding: 0 16px; max-width: 480px; margin: 0 auto; }
+.history-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 11px 0; border-bottom: 0.5px solid #e0dfd8; font-size: 14px;
+}
+.history-item:last-child { border-bottom: none; }
+.history-date { color: #888780; font-size: 13px; }
+.history-val { font-weight: 500; }
+.history-delta { font-size: 12px; margin-top: 1px; }
+.delta-up { color: #34a853; }
+.delta-dn { color: #ea4335; }
+.delta-neu { color: #888780; }
+
+.empty-history {
+  text-align: center; padding: 48px 24px; color: #b4b2a9; font-size: 14px; line-height: 1.7;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  display: inline-block; width: 12px; height: 12px;
+  border: 1.5px solid #ccc; border-top-color: #888;
+  border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: -1px;
+}
 </style>
 </head>
 <body>
@@ -113,114 +160,293 @@
   <p class="subtitle" id="last-update"><span class="spinner"></span> Ładowanie kursów…</p>
 </div>
 
-<div class="content">
-
-  <p class="section-title">Waluty i metale</p>
-
-  <div class="card">
-    <div class="card-header"><span class="card-label">🇵🇱 Złotówki</span></div>
-    <div class="input-row">
-      <input type="number" id="pln-input" placeholder="0" min="0" step="any" inputmode="decimal">
-      <span class="unit">PLN</span>
-    </div>
-    <p class="converted">= <span id="pln-in-pln">0,00 zł</span></p>
-  </div>
-
-  <div class="card">
-    <div class="card-header">
-      <span class="card-label">🇪🇺 Euro</span>
-      <span class="rate-badge">1 EUR = <span id="eur-rate">…</span> PLN</span>
-    </div>
-    <div class="input-row">
-      <input type="number" id="eur-input" placeholder="0" min="0" step="any" inputmode="decimal">
-      <span class="unit">EUR</span>
-    </div>
-    <p class="converted">= <span id="eur-in-pln">0,00 zł</span></p>
-  </div>
-
-  <div class="card">
-    <div class="card-header">
-      <span class="card-label">🥇 Złoto (uncje)</span>
-      <span class="rate-badge">1 oz = <span id="gold-rate-usd">…</span> USD<br><span id="gold-rate-pln">…</span> PLN</span>
-    </div>
-    <div class="input-row">
-      <input type="number" id="gold-input" placeholder="0" min="0" step="any" inputmode="decimal">
-      <span class="unit">oz</span>
-    </div>
-    <p class="converted">= <span id="gold-in-pln">0,00 zł</span></p>
-  </div>
-
-  <div class="card">
-    <div class="card-header">
-      <span class="card-label">🥇 Złoto (gramy)</span>
-      <span class="rate-badge">1 g = <span id="gold-rate-g-pln">…</span> PLN</span>
-    </div>
-    <div class="input-row">
-      <input type="number" id="goldg-input" placeholder="0" min="0" step="any" inputmode="decimal">
-      <span class="unit">g</span>
-    </div>
-    <p class="converted">= <span id="goldg-in-pln">0,00 zł</span></p>
-  </div>
-
-  <p class="section-title">Kryptowaluty</p>
-  <div id="crypto-cards"></div>
-
-  <div class="total-card">
-    <p class="total-label">Łącznie w złotówkach</p>
-    <p class="total-amount" id="total">0,00 zł</p>
-    <div class="breakdown" id="breakdown"></div>
-  </div>
-
-  <button class="refresh-btn" onclick="loadRates()">↻ Odśwież kursy</button>
-  <p class="footer">Kursy: NBP (EUR/USD) · Coinbase (złoto) · CoinGecko (krypto). Dane orientacyjne.</p>
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('portfel')">💼 Portfel</div>
+  <div class="tab" onclick="switchTab('historia')">📈 Historia</div>
 </div>
 
+<div class="pages">
+
+  <!-- ════ ZAKŁADKA 1: PORTFEL ════ -->
+  <div class="page active" id="page-portfel">
+    <div class="content">
+
+      <p class="section-title">Waluty i metale</p>
+
+      <div class="card">
+        <div class="card-header"><span class="card-label">🇵🇱 Złotówki</span></div>
+        <div class="input-row">
+          <input type="number" id="pln-input" placeholder="0" min="0" step="any" inputmode="decimal">
+          <span class="unit">PLN</span>
+        </div>
+        <p class="converted">= <span id="pln-in-pln">0,00 zł</span></p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-label">🇪🇺 Euro</span>
+          <span class="rate-badge">1 EUR = <span id="eur-rate">…</span> PLN</span>
+        </div>
+        <div class="input-row">
+          <input type="number" id="eur-input" placeholder="0" min="0" step="any" inputmode="decimal">
+          <span class="unit">EUR</span>
+        </div>
+        <p class="converted">= <span id="eur-in-pln">0,00 zł</span></p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-label">🥇 Złoto (uncje)</span>
+          <span class="rate-badge">1 oz = <span id="gold-rate-usd">…</span> USD&#10;<span id="gold-rate-pln">…</span> PLN</span>
+        </div>
+        <div class="input-row">
+          <input type="number" id="gold-input" placeholder="0" min="0" step="any" inputmode="decimal">
+          <span class="unit">oz</span>
+        </div>
+        <p class="converted">= <span id="gold-in-pln">0,00 zł</span></p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-label">🥇 Złoto (gramy)</span>
+          <span class="rate-badge">1 g = <span id="gold-rate-g-pln">…</span> PLN</span>
+        </div>
+        <div class="input-row">
+          <input type="number" id="goldg-input" placeholder="0" min="0" step="any" inputmode="decimal">
+          <span class="unit">g</span>
+        </div>
+        <p class="converted">= <span id="goldg-in-pln">0,00 zł</span></p>
+      </div>
+
+      <p class="section-title">Kryptowaluty</p>
+      <div id="crypto-cards"></div>
+
+      <div class="total-card">
+        <p class="total-label">Łącznie w złotówkach</p>
+        <p class="total-amount" id="total">0,00 zł</p>
+        <div class="breakdown" id="breakdown"></div>
+      </div>
+
+      <button class="refresh-btn" onclick="loadRates()">↻ Odśwież kursy</button>
+      <p class="footer-note">Kursy: NBP · Coinbase · CoinGecko. Dane orientacyjne.<br>Snapshot zapisywany codziennie o 20:00.</p>
+    </div>
+  </div>
+
+  <!-- ════ ZAKŁADKA 2: HISTORIA ════ -->
+  <div class="page" id="page-historia">
+    <div class="history-header">
+      <h2>Historia portfela</h2>
+      <p id="hist-subtitle">Dzienny snapshot o 20:00</p>
+    </div>
+
+    <div class="chart-card" id="chart-card" style="display:none">
+      <div class="chart-wrap">
+        <canvas id="histChart"></canvas>
+      </div>
+    </div>
+
+    <div class="history-list" id="history-list">
+      <div class="empty-history">
+        Brak danych historycznych.<br>
+        Pierwszy snapshot zostanie zapisany dziś o 20:00<br>
+        (jeśli aplikacja będzie otwarta lub odświeżona po tej godzinie).
+      </div>
+    </div>
+  </div>
+
+</div><!-- /pages -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
+// ══════════════════════════════════════════
+//  DANE
+// ══════════════════════════════════════════
 const CRYPTOS = [
   { id: 'ripple',             sym: 'XRP',    name: 'XRP',      emoji: '🔵' },
   { id: 'chainlink',          sym: 'LINK',   name: 'LINK',     emoji: '🔗' },
   { id: 'bonk',               sym: 'BONK',   name: 'BONK',     emoji: '🐶' },
   { id: 'pepe',               sym: 'PEPE',   name: 'PEPE',     emoji: '🐸' },
   { id: 'shiba-inu',          sym: 'SHIB',   name: 'SHIB',     emoji: '🐕' },
-  { id: 'solana',             sym: 'SOL',    name: 'SOL',      emoji: '☀️' },
+  { id: 'solana',             sym: 'SOL',    name: 'SOL',      emoji: '☀️'  },
   { id: 'cardano',            sym: 'ADA',    name: 'ADA',      emoji: '🔷' },
   { id: 'polkadot',           sym: 'DOT',    name: 'DOT',      emoji: '⚪' },
   { id: 'injective-protocol', sym: 'INJ',    name: 'INJ',      emoji: '💫' },
   { id: 'gala',               sym: 'GALA',   name: 'GALA',     emoji: '🎮' },
-  { id: 'x-empire',           sym: 'X',      name: 'X Empire', emoji: '✖️' },
+  { id: 'x-empire',           sym: 'X',      name: 'X Empire', emoji: '✖️'  },
   { id: 'popcat',             sym: 'POPCAT', name: 'POPCAT',   emoji: '🐱' },
 ];
 
 let rates = { eur: null, usd: null, goldUsd: null };
 let cryptoPrices = {};
+let currentTotal = 0;
+let histChart = null;
 
-// Bezpieczny localStorage (Safari prywatny go blokuje)
+// ── localStorage helper (bezpieczny dla Safari prywatnego) ──
 const store = {
-  get(k) { try { return localStorage.getItem(k); } catch(e) { return null; } },
-  set(k, v) { try { localStorage.setItem(k, v); } catch(e) {} }
+  get(k)    { try { return localStorage.getItem(k);    } catch(e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v);        } catch(e) {} },
 };
 
-function goldPln() {
-  return (rates.goldUsd && rates.usd) ? rates.goldUsd * rates.usd : null;
+// ── Historia: [ { date: 'YYYY-MM-DD', value: 12345.67 }, … ] ──
+function loadHistory()  { try { return JSON.parse(store.get('portfel_hist') || '[]'); } catch(e) { return []; } }
+function saveHistory(h) { store.set('portfel_hist', JSON.stringify(h)); }
+
+// ══════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['portfel','historia'][i] === name);
+  });
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (name === 'historia') renderHistory();
 }
 
+// ══════════════════════════════════════════
+//  FORMATOWANIE
+// ══════════════════════════════════════════
 function fmtPrice(usd) {
   if (!usd && usd !== 0) return '…';
   if (usd >= 1000) return usd.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' USD';
   if (usd >= 1)    return usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) + ' USD';
   return parseFloat(usd.toPrecision(4)) + ' USD';
 }
-
 function fmtPln(val) {
   if (!val && val !== 0) return '…';
   if (val >= 0.01) return val.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' zł';
   return val.toPrecision(4).replace('.', ',') + ' zł';
 }
-
 function fmt(val) {
   return val.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' zł';
 }
+function goldPln() {
+  return (rates.goldUsd && rates.usd) ? rates.goldUsd * rates.usd : null;
+}
 
+// ══════════════════════════════════════════
+//  SNAPSHOT (codziennie o 20:00)
+// ══════════════════════════════════════════
+function maybeSnapshot(total) {
+  if (total <= 0) return;
+  const now = new Date();
+  if (now.getHours() < 20) return;          // przed 20:00 — nic
+
+  const today = now.toISOString().slice(0, 10);
+  const hist  = loadHistory();
+
+  // Zapisz lub nadpisz dzisiejszy wpis
+  const idx = hist.findIndex(h => h.date === today);
+  if (idx >= 0) hist[idx].value = Math.round(total);
+  else          hist.push({ date: today, value: Math.round(total) });
+
+  // Trzymaj max 365 wpisów
+  if (hist.length > 365) hist.splice(0, hist.length - 365);
+  saveHistory(hist);
+}
+
+// ══════════════════════════════════════════
+//  RENDER HISTORIA
+// ══════════════════════════════════════════
+function renderHistory() {
+  const hist = loadHistory();
+  const list = document.getElementById('history-list');
+  const chartCard = document.getElementById('chart-card');
+
+  if (hist.length === 0) {
+    chartCard.style.display = 'none';
+    list.innerHTML = `<div class="empty-history">
+      Brak danych historycznych.<br>
+      Pierwszy snapshot zostanie zapisany dziś o 20:00<br>
+      (otwórz lub odśwież aplikację po tej godzinie).
+    </div>`;
+    return;
+  }
+
+  // Sortuj rosnąco po dacie
+  const sorted = [...hist].sort((a, b) => a.date.localeCompare(b.date));
+
+  // ── WYKRES ──
+  chartCard.style.display = 'block';
+  const labels = sorted.map(h => {
+    const [y, m, d] = h.date.split('-');
+    return d + '.' + m;
+  });
+  const values = sorted.map(h => h.value);
+
+  const ctx = document.getElementById('histChart').getContext('2d');
+  if (histChart) histChart.destroy();
+
+  histChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        borderColor: '#1a1a18',
+        borderWidth: 2,
+        pointBackgroundColor: '#1a1a18',
+        pointRadius: sorted.length <= 14 ? 4 : 2,
+        pointHoverRadius: 6,
+        tension: 0.3,
+        fill: true,
+        backgroundColor: 'rgba(26,26,24,0.06)',
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => fmt(ctx.parsed.y)
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 11 }, color: '#888780',
+            maxTicksLimit: 7, maxRotation: 0 }
+        },
+        y: {
+          grid: { color: '#f0efe8' },
+          ticks: {
+            font: { size: 11 }, color: '#888780',
+            callback: v => (v >= 1000 ? (v/1000).toFixed(0)+'k' : v) + ' zł'
+          }
+        }
+      }
+    }
+  });
+
+  // ── LISTA ──
+  const listItems = [...sorted].reverse(); // najnowsze na górze
+  list.innerHTML = listItems.map((h, i) => {
+    const prev = listItems[i + 1];
+    let deltaHtml = '';
+    if (prev) {
+      const diff = h.value - prev.value;
+      const pct  = ((diff / prev.value) * 100).toFixed(1);
+      const cls  = diff > 0 ? 'delta-up' : diff < 0 ? 'delta-dn' : 'delta-neu';
+      const sign = diff > 0 ? '+' : '';
+      deltaHtml  = `<span class="history-delta ${cls}">${sign}${fmt(diff)} (${sign}${pct}%)</span>`;
+    }
+    const [y, m, d] = h.date.split('-');
+    return `<div class="history-item">
+      <div>
+        <div class="history-date">${d}.${m}.${y}</div>
+        ${deltaHtml}
+      </div>
+      <div class="history-val">${fmt(h.value)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  KARTY KRYPTO
+// ══════════════════════════════════════════
 function buildCryptoCards() {
   document.getElementById('crypto-cards').innerHTML = CRYPTOS.map(c => `
     <div class="card">
@@ -237,6 +463,9 @@ function buildCryptoCards() {
   `).join('');
 }
 
+// ══════════════════════════════════════════
+//  ZAPIS / ODCZYT ILOŚCI
+// ══════════════════════════════════════════
 function saveValues() {
   const data = {};
   ['pln-input','eur-input','gold-input','goldg-input',
@@ -246,19 +475,20 @@ function saveValues() {
   });
   store.set('portfel_v2', JSON.stringify(data));
 }
-
 function loadSavedValues() {
   const raw = store.get('portfel_v2');
   if (!raw) return;
   try {
-    const data = JSON.parse(raw);
-    Object.entries(data).forEach(([id, val]) => {
+    Object.entries(JSON.parse(raw)).forEach(([id, val]) => {
       const el = document.getElementById(id);
       if (el && val !== '') el.value = val;
     });
   } catch(e) {}
 }
 
+// ══════════════════════════════════════════
+//  KALKULATOR
+// ══════════════════════════════════════════
 function calc() {
   const pln   = parseFloat(document.getElementById('pln-input').value)   || 0;
   const eur   = parseFloat(document.getElementById('eur-input').value)   || 0;
@@ -268,8 +498,8 @@ function calc() {
   const plnVal   = pln;
   const eurVal   = rates.eur ? eur * rates.eur : 0;
   const gp       = goldPln();
-  const goldVal  = gp ? gold  * gp            : 0;
-  const goldgVal = gp ? goldg * (gp / 31.1035): 0;
+  const goldVal  = gp ? gold  * gp             : 0;
+  const goldgVal = gp ? goldg * (gp / 31.1035) : 0;
 
   let cryptoTotal = 0;
   const cryptoItems = [];
@@ -284,6 +514,7 @@ function calc() {
   });
 
   const total = plnVal + eurVal + goldVal + goldgVal + cryptoTotal;
+  currentTotal = total;
 
   document.getElementById('pln-in-pln').textContent   = fmt(plnVal);
   document.getElementById('eur-in-pln').textContent   = fmt(eurVal);
@@ -308,26 +539,28 @@ function calc() {
       <span class="breakdown-pct">${pct}%</span>
     </div>`;
   }).join('') : '';
+
+  maybeSnapshot(total);
 }
 
+// ══════════════════════════════════════════
+//  POBIERANIE KURSÓW
+// ══════════════════════════════════════════
 async function loadRates() {
   const statusEl = document.getElementById('last-update');
   statusEl.innerHTML = '<span class="spinner"></span> Pobieranie kursów…';
-
   try {
-    // NBP — ma poprawne nagłówki CORS, działa z każdej strony
     const [eurRes, usdRes] = await Promise.all([
       fetch('https://api.nbp.pl/api/exchangerates/rates/a/eur/?format=json'),
       fetch('https://api.nbp.pl/api/exchangerates/rates/a/usd/?format=json')
     ]);
-    if (!eurRes.ok || !usdRes.ok) throw new Error('NBP error');
+    if (!eurRes.ok || !usdRes.ok) throw new Error('NBP');
     rates.eur = (await eurRes.json()).rates[0].mid;
     rates.usd = (await usdRes.json()).rates[0].mid;
     document.getElementById('eur-rate').textContent = rates.eur.toFixed(4);
 
-    // Złoto — Coinbase public API
     const gRes = await fetch('https://api.coinbase.com/v2/prices/XAU-USD/spot');
-    if (!gRes.ok) throw new Error('Coinbase error');
+    if (!gRes.ok) throw new Error('Coinbase');
     rates.goldUsd = parseFloat((await gRes.json()).data.amount);
     const gp = goldPln();
     document.getElementById('gold-rate-usd').textContent = Math.round(rates.goldUsd).toLocaleString('pl-PL');
@@ -336,12 +569,10 @@ async function loadRates() {
       document.getElementById('gold-rate-g-pln').textContent = (gp / 31.1035).toFixed(2).replace('.', ',');
     }
 
-    // CoinGecko — darmowe, bez klucza
     const ids   = CRYPTOS.map(c => c.id).join(',');
     const cgRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
-    if (!cgRes.ok) throw new Error('CoinGecko error');
+    if (!cgRes.ok) throw new Error('CoinGecko');
     const cgData = await cgRes.json();
-
     CRYPTOS.forEach(c => {
       const price = cgData[c.id]?.usd ?? null;
       cryptoPrices[c.sym] = price;
@@ -354,22 +585,22 @@ async function loadRates() {
 
     statusEl.textContent = 'Kursy z ' + new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
     calc();
-
   } catch(e) {
     statusEl.textContent = '⚠ Błąd pobierania — sprawdź internet';
     console.error(e);
   }
 }
 
-// Start
+// ══════════════════════════════════════════
+//  START
+// ══════════════════════════════════════════
 buildCryptoCards();
 loadSavedValues();
 calc();
 
-// Nasłuchiwacze z zapisem
-const allInputIds = ['pln-input','eur-input','gold-input','goldg-input',
+const allIds = ['pln-input','eur-input','gold-input','goldg-input',
   ...CRYPTOS.map(c => 'input-' + c.sym)];
-allInputIds.forEach(id => {
+allIds.forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('input', () => { calc(); saveValues(); });
 });
