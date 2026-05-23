@@ -102,14 +102,30 @@ body {
 .breakdown-bar { height: 100%; border-radius: 4px; background: #d3d1c7; transition: width 0.3s; }
 .breakdown-pct { color: #d3d1c7; min-width: 36px; text-align: right; font-size: 11.5px; }
 
-.refresh-btn {
-  width: 100%; padding: 12px; font-size: 14px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  background: #fff; border: 0.5px solid #e0dfd8;
-  border-radius: 10px; color: #1a1a18; margin-bottom: 10px;
+.btn {
+  width: 100%; padding: 13px; font-size: 14px; font-weight: 500; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  border-radius: 12px; margin-bottom: 10px;
   -webkit-tap-highlight-color: transparent;
+  border: none; outline: none;
+  transition: transform 0.1s ease, opacity 0.1s ease;
+  position: relative; overflow: hidden;
+  -webkit-appearance: none;
 }
-.refresh-btn:active { background: #f1efe8; }
+.btn:active { transform: scale(0.96); opacity: 0.85; }
+.btn.loading { opacity: 0.6; pointer-events: none; }
+.refresh-btn { background: #fff; border: 0.5px solid #e0dfd8 !important; color: #1a1a18; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+.save-snap-btn { background: #1a1a18; color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+.save-snap-btn.done { background: #1e8f4e; transition: background 0.3s; }
+/* ripple */
+.ripple-el {
+  position: absolute; border-radius: 50%; pointer-events: none;
+  background: rgba(255,255,255,0.25); width: 60px; height: 60px;
+  margin-left: -30px; margin-top: -30px;
+  animation: ripple-anim 0.5s ease-out forwards;
+}
+.refresh-btn .ripple-el { background: rgba(0,0,0,0.08); }
+@keyframes ripple-anim { from { transform: scale(0); opacity: 1; } to { transform: scale(4); opacity: 0; } }
 .footer-note { font-size: 11px; color: #b4b2a9; text-align: center; padding: 0 16px 6px; line-height: 1.6; }
 
 /* ── HISTORIA ── */
@@ -227,8 +243,8 @@ canvas#histChart { width: 100% !important; height: 100% !important; }
         <div class="breakdown" id="breakdown"></div>
       </div>
 
-      <button class="refresh-btn" onclick="loadRates()">↻ Odśwież kursy</button>
-      <p class="footer-note">Kursy: NBP · Coinbase · CoinGecko. Dane orientacyjne.<br>Snapshot zapisywany codziennie o 20:00.</p>
+      <button class="btn refresh-btn" id="btn-refresh" onclick="animBtn(this); loadRates()"><span id="btn-refresh-icon">↻</span> <span id="btn-refresh-txt">Odśwież kursy</span></button>
+      <p class="footer-note">Kursy: NBP · Coinbase · CoinGecko. Dane orientacyjne.</p>
     </div>
   </div>
 
@@ -236,7 +252,13 @@ canvas#histChart { width: 100% !important; height: 100% !important; }
   <div class="page" id="page-historia">
     <div class="history-header">
       <h2>Historia portfela</h2>
-      <p id="hist-subtitle">Dzienny snapshot o 20:00</p>
+      <p id="hist-subtitle">Zapisz ręcznie stan portfela</p>
+    </div>
+
+    <div style="padding: 10px 16px 0; max-width: 480px; margin: 0 auto;">
+      <button class="btn save-snap-btn" id="btn-snap" onclick="manualSnapshot(this)">
+        <span id="snap-icon">💾</span> <span id="snap-txt">Zapisz stan portfela</span>
+      </button>
     </div>
 
     <div class="chart-card" id="chart-card" style="display:none">
@@ -325,24 +347,51 @@ function goldPln() {
 }
 
 // ══════════════════════════════════════════
-//  SNAPSHOT (codziennie o 20:00)
+//  MANUAL SNAPSHOT
 // ══════════════════════════════════════════
-function maybeSnapshot(total) {
-  if (total <= 0) return;
-  const now = new Date();
-  if (now.getHours() < 20) return;          // przed 20:00 — nic
+function manualSnapshot(btn) {
+  if (currentTotal <= 0) {
+    alert('Portfel jest pusty — wpisz ilości i odśwież kursy przed zapisem.');
+    return;
+  }
+  // animacja
+  const icon = document.getElementById('snap-icon');
+  const txt  = document.getElementById('snap-txt');
+  btn.classList.add('loading');
+  icon.textContent = '⏳'; txt.textContent = 'Zapisywanie…';
 
-  const today = now.toISOString().slice(0, 10);
-  const hist  = loadHistory();
+  setTimeout(() => {
+    const now  = new Date();
+    // klucz: data + godzina żeby można było wiele wpisów dziennie
+    const key  = now.toISOString().slice(0, 16).replace('T', ' ');
+    const date = now.toISOString().slice(0, 10);
+    const time = now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
 
-  // Zapisz lub nadpisz dzisiejszy wpis
-  const idx = hist.findIndex(h => h.date === today);
-  if (idx >= 0) hist[idx].value = Math.round(total);
-  else          hist.push({ date: today, value: Math.round(total) });
+    const hist = loadHistory();
+    hist.push({ date, time, key, value: Math.round(currentTotal) });
+    if (hist.length > 500) hist.splice(0, hist.length - 500);
+    saveHistory(hist);
 
-  // Trzymaj max 365 wpisów
-  if (hist.length > 365) hist.splice(0, hist.length - 365);
-  saveHistory(hist);
+    btn.classList.remove('loading');
+    btn.classList.add('done');
+    icon.textContent = '✓'; txt.textContent = 'Zapisano!';
+
+    setTimeout(() => {
+      btn.classList.remove('done');
+      icon.textContent = '💾'; txt.textContent = 'Zapisz stan portfela';
+    }, 2000);
+
+    renderHistory();
+  }, 600);
+}
+
+// ── animacja ripple na przyciskach ──
+function animBtn(btn) {
+  const r = document.createElement('span');
+  r.className = 'ripple-el';
+  r.style.left = '50%'; r.style.top = '50%';
+  btn.appendChild(r);
+  setTimeout(() => r.remove(), 600);
 }
 
 // ══════════════════════════════════════════
@@ -434,9 +483,10 @@ function renderHistory() {
       deltaHtml  = `<span class="history-delta ${cls}">${sign}${fmt(diff)} (${sign}${pct}%)</span>`;
     }
     const [y, m, d] = h.date.split('-');
+    const timeStr = h.time ? ` · ${h.time}` : '';
     return `<div class="history-item">
       <div>
-        <div class="history-date">${d}.${m}.${y}</div>
+        <div class="history-date">${d}.${m}.${y}${timeStr}</div>
         ${deltaHtml}
       </div>
       <div class="history-val">${fmt(h.value)}</div>
@@ -540,8 +590,8 @@ function calc() {
     </div>`;
   }).join('') : '';
 
-  maybeSnapshot(total);
 }
+
 
 // ══════════════════════════════════════════
 //  POBIERANIE KURSÓW
@@ -549,6 +599,10 @@ function calc() {
 async function loadRates() {
   const statusEl = document.getElementById('last-update');
   statusEl.innerHTML = '<span class="spinner"></span> Pobieranie kursów…';
+  const refBtn = document.getElementById('btn-refresh');
+  const refTxt = document.getElementById('btn-refresh-txt');
+  const refIcon = document.getElementById('btn-refresh-icon');
+  if (refBtn) { refBtn.classList.add('loading'); refIcon.textContent='⏳'; refTxt.textContent='Pobieranie…'; }
   try {
     const [eurRes, usdRes] = await Promise.all([
       fetch('https://api.nbp.pl/api/exchangerates/rates/a/eur/?format=json'),
@@ -584,9 +638,11 @@ async function loadRates() {
     });
 
     statusEl.textContent = 'Kursy z ' + new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+    if (refBtn) { refBtn.classList.remove('loading'); refIcon.textContent='↻'; refTxt.textContent='Odśwież kursy'; }
     calc();
   } catch(e) {
     statusEl.textContent = '⚠ Błąd pobierania — sprawdź internet';
+    if (refBtn) { refBtn.classList.remove('loading'); refIcon.textContent='↻'; refTxt.textContent='Odśwież kursy'; }
     console.error(e);
   }
 }
